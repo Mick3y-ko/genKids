@@ -1,6 +1,6 @@
 import argparse
 
-parser = argparse.ArgumentParser(description="username generator v0.1",epilog="example:\n genKids.py -f users.txt -o enumeration.txt -d example.com",)
+parser = argparse.ArgumentParser(description="username generator v0.2",epilog="example:\n genKids.py -f users.txt -o enumeration.txt -d example.com",)
 parser.add_argument("-f", "--file", required=True, help="username file")
 parser.add_argument("-o", "--output", required=True, help="output file")
 parser.add_argument("-n", "--number", help="extra number", default=None)
@@ -13,7 +13,15 @@ outputFile = args.output
 number = args.number
 domain = args.domain
 
-def argumentsCheck():
+def checkOptions():
+    if not args.file:
+        print("[-] This tool expects a username file, but you missed the '-f' flag.")
+        exit()
+    if not args.output:
+        print("[-] This tool expects making output file, but you missed the '-o' flag.")
+        exit()
+
+def checkArguments():
     with open(userFile, 'r') as file:
         userInputFile = [line.strip().split() for line in file.readlines()]
         
@@ -21,7 +29,7 @@ def argumentsCheck():
         if len(userInputFile[idx]) == 1:
             print(f'[-] This tool requires at least two arguments in {userFile}, But there are only one argument.')
             exit()
-        if len(userInputFile[idx]) == 2:
+        elif len(userInputFile[idx]) == 2:
             intCnt = 0
             for item in userInputFile[idx]:
                 try:
@@ -32,7 +40,7 @@ def argumentsCheck():
             if intCnt >= 1:
                 print(f'[-] This tool requires at least two string arguments in {userFile}, But there is only one string argument.')
                 exit()
-        if len(userInputFile[idx]) == 3:
+        elif len(userInputFile[idx]) == 3:
             intCnt = 0
             for item in userInputFile[idx]:
                 try:
@@ -43,10 +51,13 @@ def argumentsCheck():
             if intCnt >= 2:
                 print(f'[-] This tool requires at least two string arguments in {userFile}, But there is only one string argument.')
                 exit()
-        if len(userInputFile[idx]) == 4:
+        elif len(userInputFile[idx]) == 4:
             if not args.phone:
                 print(f"[-] Too many arguments in {userFile}. Did you miss a flag '-p' ?")
                 exit()
+        else:
+            print(f'[-] There is something wrong with {userFile}. Did you get a chance to read README.md ?')
+            exit()
             
 
 def generateNames():
@@ -137,7 +148,8 @@ def appendDomain(res, domain):
     return newRes
 
 def main():
-    argumentsCheck()
+    checkOptions()
+    checkArguments()
     res = generateNames()
     
     if number is None:
