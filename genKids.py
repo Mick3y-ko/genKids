@@ -1,172 +1,126 @@
 import argparse
+import sys
 
-parser = argparse.ArgumentParser(description="username generator v0.2",epilog="example:\n genKids.py -f users.txt -o enumeration.txt -d example.com",)
-parser.add_argument("-f", "--file", required=True, help="username file")
-parser.add_argument("-o", "--output", required=True, help="output file")
-parser.add_argument("-n", "--number", help="extra number", default=None)
-parser.add_argument("-d", "--domain", help="domain name", default=None)
-parser.add_argument("-p", "--phone", help="phone number", action="store_true")
-args = parser.parse_args()
+# 에러 출력 함수
+def printError(case, filename):
+    {
+        # -f 플래그 미사용
+        1: lambda: (print("[-] This tool requires a input file; you missed the '-f' flag."), sys.exit(1)),
+        # -o 플래그 미사용
+        2: lambda: (print("[-] This tool requires an output file; you missed the '-o' flag."), sys.exit(1)),
+        # 인자가 2-3개가 아니면 오류
+        3: lambda: (print(f'[-] This tool requires two or three string arguments in {filename}.'), sys.exit(1))
+    }.get(case, lambda: None)()
 
-userFile = args.file
-outputFile = args.output
-number = args.number
-domain = args.domain
+# 인자 핸들링
+def getArgs():
+    parser = argparse.ArgumentParser(description="username generator v0.3.1")
+    parser.add_argument("-f", "--file", required=True, help="username file")
+    parser.add_argument("-o", "--output", required=True, help="output file")
+    parser.add_argument("-n", "--number", help="extra number", default=None)
+    parser.add_argument("-d", "--domain", help="domain name", default=None) 
+    args = parser.parse_args()
+    return args.file, args.output, args.number, args.domain
 
-def checkOptions():
-    if not args.file:
-        print("[-] This tool expects a username file, but you missed the '-f' flag.")
-        exit()
-    if not args.output:
-        print("[-] This tool expects making output file, but you missed the '-o' flag.")
-        exit()
+# 사용자가 사용한 인자 검증
+def checkOptions(userfile, outputfile):
+    # userfile, outputfile은 필수적으로 들어가야함
+    if userfile is None:
+        printError(1, userfile)
+    if outputfile is None:
+        printError(2, userfile)
 
-def checkArguments():
-    with open(userFile, 'r') as file:
-        userInputFile = [line.strip().split() for line in file.readlines()]
-        
-    for idx in range(len(userInputFile)):
-        if len(userInputFile[idx]) == 1:
-            print(f'[-] This tool requires at least two arguments in {userFile}, But there are only one argument.')
-            exit()
-        elif len(userInputFile[idx]) == 2:
-            intCnt = 0
-            for item in userInputFile[idx]:
-                try:
-                    int(item)
-                    intCnt += 1
-                except ValueError:
-                    continue
-            if intCnt >= 1:
-                print(f'[-] This tool requires at least two string arguments in {userFile}, But there is only one string argument.')
-                exit()
-        elif len(userInputFile[idx]) == 3:
-            intCnt = 0
-            for item in userInputFile[idx]:
-                try:
-                    int(item)
-                    intCnt += 1
-                except ValueError:
-                    continue
-            if intCnt >= 2:
-                print(f'[-] This tool requires at least two string arguments in {userFile}, But there is only one string argument.')
-                exit()
-        elif len(userInputFile[idx]) == 4:
-            if not args.phone:
-                print(f"[-] Too many arguments in {userFile}. Did you miss a flag '-p' ?")
-                exit()
-        else:
-            print(f'[-] There is something wrong with {userFile}. Did you get a chance to read README.md ?')
-            exit()
-            
+    with open(userfile, "r", encoding="utf-8") as f:
+        lines = [line.strip().split() for line in f if line.strip()]
 
-def generateNames():
+    for parts in lines:
+        if not (2 <= len(parts) <= 3):
+            printError(3, userfile)
+
+def makeUserList(userfile):
+    with open(userfile, "r", encoding="utf-8") as f:
+        return [line.strip().split() for line in f if line.strip()]
+
+def makeWordlist(argument):
     res = []
-    with open(userFile, 'r') as file:
-        for line in file:
-            parts = line.strip().split()
-            if len(parts) == 3:
-                first, middle, last = parts[0], parts[1], parts[2]
-                res.extend([
-                    first + middle + last,
-                    first + "." + middle + last,
-                    middle + last + first,
-                    middle + last + "." + first,
-                    first + middle[0] + last[0],
-                    first + "." + middle[0] + last[0],
-                    middle[0] + last[0] + first,
-                    middle[0] + last[0] + "." + first,
-                    first[0] + middle[0] + last[0],
-                    first[0] + "." + middle[0] + last[0],
-                    middle[0] + last[0] + first[0],
-                    middle[0] + last[0] + "." + first[0],
-                    first[0] + middle + last,
-                    first[0] + "." + middle + last,
-                    middle + last + first[0],
-                    middle + last + "." + first[0],
-                    middle + last
-                ])
-            elif len(parts) == 2:
-                first, last = parts[0], parts[1]
-                res.extend([
-                    first + last,
-                    first + "." + last[0],
-                    first[0] + last,
-                    first[0] + "." + last,
-                    first + "." + last[0]
-                ])
-            elif len(parts) == 4:
-                first, middle, last, phone = parts[0], parts[1], parts[2], parts[3]
-                res.extend([
-                    first + middle + last,
-                    first + "." + middle + last,
-                    middle + last + first,
-                    middle + last + "." + first,
-                    first + middle[0] + last[0],
-                    first + "." + middle[0] + last[0],
-                    middle[0] + last[0] + first,
-                    middle[0] + last[0] + "." + first,
-                    first[0] + middle[0] + last[0],
-                    first[0] + "." + middle[0] + last[0],
-                    middle[0] + last[0] + first[0],
-                    middle[0] + last[0] + "." + first[0],
-                    first[0] + middle + last,
-                    first[0] + "." + middle + last,
-                    middle + last + first[0],
-                    middle + last + "." + first[0],
-                    middle + last,
-                    first + middle + last + phone,
-                    first + "." + middle + last + phone,
-                    middle + last + first + phone,
-                    middle + last + "." + first + phone,
-                    first + middle[0] + last[0] + phone,
-                    first + "." + middle[0] + last[0] + phone,
-                    middle[0] + last[0] + first + phone,
-                    middle[0] + last[0] + "." + first + phone,
-                    first[0] + middle[0] + last[0] + phone,
-                    first[0] + "." + middle[0] + last[0] + phone,
-                    middle[0] + last[0] + first[0] + phone,
-                    middle[0] + last[0] + "." + first[0] + phone,
-                    first[0] + middle + last + phone,
-                    first[0] + "." + middle + last + phone,
-                    middle + last + first[0] + phone,
-                    middle + last + "." + first[0] + phone,
-                    middle + last + phone
-                ])
+    if len(argument) == 2:
+        first, last = argument[0], argument[1]
+        res.extend([
+            first + last,
+            first + "." + last,
+            first + "." + last[0],
+            first[0] + last,
+            first[0] + "." + last,
+        ])
+    elif len(argument) == 3:
+        first, middle, last = argument[0], argument[1], argument[2]
+        res.extend([
+            first + middle + last,
+            first + "." + middle + last,
+            middle + last + first,
+            middle + last + "." + first,
+            first + middle[0] + last[0],
+            first + "." + middle[0] + last[0],
+            middle[0] + last[0] + first,
+            middle[0] + last[0] + "." + first,
+            first[0] + middle[0] + last[0],
+            first[0] + "." + middle[0] + last[0],
+            middle[0] + last[0] + first[0],
+            middle[0] + last[0] + "." + first[0],
+            first[0] + middle + last,
+            first[0] + "." + middle + last,
+            middle + last + first[0],
+            middle + last + "." + first[0],
+            middle + last,
+        ])
     return res
 
-def appendNumber(res, number):
-    newRes = []
-    for curInfo in res:
-        newRes.append(curInfo + number)
-    return newRes
+def getWordlistFromUserList(userlist):
+    res = []
+    for user in userlist:
+        res.extend(makeWordlist(user)) 
+    return res
 
-def appendDomain(res, domain):
-    newRes = []
-    for curInfo in res:
-        newRes.append(curInfo + '@' + domain)
-    return newRes
+def addNumber(items, number):
+    res = []
+    number = str(number)
+    for item in items:
+        res.append(item + number)
+    return res
 
+def addDomain(items, domain):
+    res = []
+    for item in items:
+        res.append(item + '@' + domain)
+    return res
+
+def saveResult(outputfile, res):
+    seen, unique = set(), []
+    for s in res:
+        if s not in seen:
+            seen.add(s)
+            unique.append(s)
+
+    with open(outputfile, "w", encoding="utf-8") as f:
+        f.write("\n".join(unique))
+
+    print("[*] userId generator v0.3.1 - Copyright 2025 All rights reserved by mick3y")
+    print("[+] Success generating username list")
+    print(f"[+] output file : {outputfile}")
+
+# 메인 함수
 def main():
-    checkOptions()
-    checkArguments()
-    res = generateNames()
-    
-    if number is None:
-        if domain is not None:
-            res = appendDomain(res, domain)
-    else:
-        if domain is not None:
-            res = appendNumber(res, number)
-            res = appendDomain(res, domain)
-        else:
-            res = appendNumber(res, number)
-    with open(outputFile, 'w') as file:
-        file.write("\n".join(res))
+    userfile, outputfile, number, domain = getArgs()
+    checkOptions(userfile, outputfile)
+    namelist = makeUserList(userfile)
+    res = getWordlistFromUserList(namelist)
 
-    print(f'[+] Success generating username list')
-    print(f'[+] output file : {outputFile}')
+    if number is not None:
+        res = res + addNumber(res, number)
+    if domain is not None:
+        res = addDomain(res, domain)
 
+    saveResult(outputfile, res)
 
 if __name__ == "__main__":
     main()
